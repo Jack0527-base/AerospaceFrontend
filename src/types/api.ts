@@ -149,4 +149,147 @@ export interface PlateInfo {
 // 车牌检测响应
 export interface DetectResponse extends BaseResponse {
   infos?: PlateInfo[]
+}
+
+// ============ 新后端 API 类型定义 ============
+
+// 统一响应格式（新后端）
+export interface ApiSuccessResponse<T = any> {
+  success: true
+  data: T
+}
+
+export interface ApiErrorResponse {
+  success: false
+  error: string
+}
+
+export type BackendApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse
+
+// ============ 认证相关类型（新后端） ============
+
+// 自动注册临时账号请求
+export interface AutoRegisterRequest {
+  deviceId?: string
+  userAgent?: string
+}
+
+// 临时用户信息
+export interface TemporaryUser {
+  id: string
+  email: string
+  name: string | null
+  role: string
+  isTemporary: boolean
+}
+
+// 自动注册响应
+export interface AutoRegisterResponse {
+  user: TemporaryUser
+  temporaryPassword: string
+  message: string
+}
+
+// ============ 检测相关类型（新后端） ============
+
+// 检测记录状态
+export type InspectionStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED'
+
+// 检测记录
+export interface InspectionRecord {
+  id: string
+  imageUrl: string
+  confidence: number
+  detectedAt: string
+  status: InspectionStatus
+  createdAt?: string
+  updatedAt?: string
+  suggestions?: string[]
+  originalSize?: number
+  compressedSize?: number
+  imageFormat?: string
+  detectionMethod?: string
+}
+
+// 检测响应（新后端）
+export interface InspectionDetectResponse {
+  id: string
+  imageUrl: string
+  confidence: number
+  detectedAt: string
+  status: InspectionStatus
+  suggestions?: string[]
+  originalSize?: number
+  compressedSize?: number
+  imageFormat?: string
+  detectionMethod?: string
+}
+
+// 检测记录列表查询参数
+export interface InspectionRecordsQuery {
+  page?: number
+  limit?: number
+  status?: InspectionStatus
+  startDate?: string
+  endDate?: string
+  minConfidence?: number
+  maxConfidence?: number
+}
+
+// 分页信息
+export interface PaginationInfo {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
+// 检测记录列表响应
+export interface InspectionRecordsResponse {
+  records: InspectionRecord[]
+  pagination: PaginationInfo
+}
+
+// 更新检测记录状态请求
+export interface UpdateRecordStatusRequest {
+  status: 'CONFIRMED' | 'REJECTED'
+}
+
+// ============ 统计相关类型（新后端） ============
+
+// 统计时间范围
+export type StatisticsPeriod = 'today' | 'week' | 'all'
+
+// 置信度分布
+export interface ConfidenceDistribution {
+  low: number    // 0.0 - 0.4
+  medium: number // 0.4 - 0.7
+  high: number   // 0.7 - 1.0
+}
+
+// 状态统计
+export interface StatusCount {
+  pending: number
+  confirmed: number
+  rejected: number
+}
+
+// 统计数据响应
+export interface StatisticsResponse {
+  totalCount: number
+  averageConfidence: number
+  confidenceDistribution: ConfidenceDistribution
+  statusCount: StatusCount
+}
+
+// 置信度分布区间
+export interface ConfidenceBin {
+  range: [number, number]
+  count: number
+}
+
+// 置信度分布详情响应
+export interface ConfidenceDistributionResponse {
+  bins: number
+  distribution: ConfidenceBin[]
 } 

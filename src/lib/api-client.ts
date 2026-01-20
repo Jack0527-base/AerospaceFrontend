@@ -13,7 +13,19 @@ import {
   ApiVersionResponse,
   DetectRequest,
   DetectResponse,
-  PlateInfo
+  PlateInfo,
+  // 新后端 API 类型
+  AutoRegisterRequest,
+  AutoRegisterResponse,
+  InspectionDetectResponse,
+  InspectionRecordsQuery,
+  InspectionRecordsResponse,
+  InspectionRecord,
+  UpdateRecordStatusRequest,
+  StatisticsPeriod,
+  StatisticsResponse,
+  ConfidenceDistributionResponse,
+  ApiSuccessResponse
 } from '@/types/api'
 
 // API客户端配置
@@ -24,8 +36,8 @@ interface ApiClientConfig {
 }
 
 const DEFAULT_CONFIG: ApiClientConfig = {
-  // 直接访问后端API服务器
-  baseURL: 'https://gsxzcneaelbf.sealosbja.site',
+  // 新后端 API 服务器地址
+  baseURL: 'https://cyzznvgauyxi.sealosbja.site',
   timeout: 30000,
   debug: process.env.NODE_ENV === 'development'
 }
@@ -41,7 +53,7 @@ export class ApiClient {
   constructor(config: Partial<ApiClientConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config }
     
-    // 创建axios实例
+    // 创建axios实例（使用 Session Cookie 认证）
     this.axios = axios.create({
       baseURL: this.config.baseURL,
       timeout: this.config.timeout,
@@ -49,17 +61,14 @@ export class ApiClient {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      withCredentials: false
+      withCredentials: true // 启用 Cookie 认证（NextAuth Session）
     })
 
-    // 请求拦截器
+    // 请求拦截器（新后端使用 Session Cookie，无需手动添加 token）
     this.axios.interceptors.request.use(
       (config) => {
-        // 添加认证token
-        const token = this.getToken()
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`
-        }
+        // 新后端使用 NextAuth Session Cookie，会自动携带
+        // 不再需要手动添加 Authorization token
 
         if (this.config.debug) {
           console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`)
@@ -122,7 +131,26 @@ export class ApiClient {
   // ============ 认证API ============
 
   /**
-   * 用户注册
+   * 自动注册临时账号（新后端）
+   * POST /api/auth/auto-register
+   */
+  async autoRegister(request?: AutoRegisterRequest): Promise<AutoRegisterResponse> {
+    try {
+      const response = await this.axios.post<ApiSuccessResponse<AutoRegisterResponse>>(
+        '/api/auth/auto-register',
+        request || {}
+      )
+      if (response.data.success) {
+        return response.data.data
+      }
+      throw new Error('自动注册失败')
+    } catch (error: any) {
+      throw this.handleError(error, '自动注册临时账号失败')
+    }
+  }
+
+  /**
+   * 用户注册（旧 API，保留兼容）
    * POST /api/v0/auth/register
    */
   async register(request: RegisterRequest): Promise<RegisterResponse> {
@@ -414,6 +442,173 @@ export class ApiClient {
     }
   }
 
+  // ============ 新后端检测 API ============
+
+  /**
+   * 图片上传和检测（新后端 - 文件上传方式）
+   * POST /api/inspection/detect
+   */
+  async inspectionDetectByFile(file: File): Promise<InspectionDetectResponse> {
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+
+      const response = await this.axios.post<ApiSuccessResponse<InspectionDetectResponse>>(
+        '/api/inspection/detect',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      )
+
+      if (response.data.success) {
+        return response.data.data
+      }
+      throw new Error('检测失败')
+    } catch (error: any) {
+      throw this.handleError(error, '图片检测失败')
+    }
+  }
+
+  /**
+   * 图片上传和检测（新后端 - Base64方式）
+   * POST /api/inspection/detect
+   */
+  async inspectionDetectByBase64(imageBase64: string): Promise<InspectionDetectResponse> {
+    try {
+      // 确保 Base64 字符串包含 data:image 前缀
+      const base64Data = imageBase64.startsWith('data:image') 
+        ? imageBase64 
+        : `data:image/jpeg;base64,${imageBase64}`
+
+      const response = await this.axios.post<ApiSuccessResponse<InspectionDetectResponse>>(
+        '/api/inspection/detect',
+        { imageBase64: base64Data },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      if (response.data.success) {
+        return response.data.data
+      }
+      throw new Error('检测失败')
+    } catch (error: any) {
+      throw this.handleError(error, '图片检测失败')
+    }
+  }
+
+  /**
+   * 获取检测记录列表（新后端）
+   * GET /api/inspection/records
+   */
+  async getInspectionRecords(query?: InspectionRecordsQuery): Promise<InspectionRecordsResponse> {
+    try {
+      const response = await this.axios.get<ApiSuccessResponse<InspectionRecordsResponse>>(
+        '/api/inspection/records',
+        { params: query }
+      )
+
+      if (response.data.success) {
+        return response.data.data
+      }
+      throw new Error('获取检测记录失败')
+    } catch (error: any) {
+      throw this.handleError(error, '获取检测记录列表失败')
+    }
+  }
+
+  /**
+   * 获取单个检测记录（新后端）
+   * GET /api/inspection/records/:id
+   */
+  async getInspectionRecord(id: string): Promise<InspectionRecord> {
+    try {
+      const response = await this.axios.get<ApiSuccessResponse<InspectionRecord>>(
+        `/api/inspection/records/${id}`
+      )
+
+      if (response.data.success) {
+        return response.data.data
+      }
+      throw new Error('获取检测记录失败')
+    } catch (error: any) {
+      throw this.handleError(error, '获取检测记录失败')
+    }
+  }
+
+  /**
+   * 更新检测记录状态（新后端）
+   * PATCH /api/inspection/records/:id/status
+   */
+  async updateInspectionRecordStatus(
+    id: string,
+    request: UpdateRecordStatusRequest
+  ): Promise<InspectionRecord> {
+    try {
+      const response = await this.axios.patch<ApiSuccessResponse<InspectionRecord>>(
+        `/api/inspection/records/${id}/status`,
+        request
+      )
+
+      if (response.data.success) {
+        return response.data.data
+      }
+      throw new Error('更新检测记录状态失败')
+    } catch (error: any) {
+      throw this.handleError(error, '更新检测记录状态失败')
+    }
+  }
+
+  // ============ 统计相关 API（新后端） ============
+
+  /**
+   * 获取统计数据（新后端）
+   * GET /api/statistics
+   */
+  async getStatistics(period: StatisticsPeriod = 'all'): Promise<StatisticsResponse> {
+    try {
+      const response = await this.axios.get<ApiSuccessResponse<StatisticsResponse>>(
+        '/api/statistics',
+        { params: { period } }
+      )
+
+      if (response.data.success) {
+        return response.data.data
+      }
+      throw new Error('获取统计数据失败')
+    } catch (error: any) {
+      throw this.handleError(error, '获取统计数据失败')
+    }
+  }
+
+  /**
+   * 获取置信度分布详情（新后端）
+   * GET /api/statistics/distribution
+   */
+  async getConfidenceDistribution(
+    period: StatisticsPeriod = 'all',
+    bins: number = 10
+  ): Promise<ConfidenceDistributionResponse> {
+    try {
+      const response = await this.axios.get<ApiSuccessResponse<ConfidenceDistributionResponse>>(
+        '/api/statistics/distribution',
+        { params: { period, bins } }
+      )
+
+      if (response.data.success) {
+        return response.data.data
+      }
+      throw new Error('获取置信度分布失败')
+    } catch (error: any) {
+      throw this.handleError(error, '获取置信度分布详情失败')
+    }
+  }
+
   // ============ 车牌检测API ============
 
   /**
@@ -680,7 +875,12 @@ export class ApiClient {
     if (error.response?.data) {
       const data = error.response.data
       
-      // 处理后端API的标准错误格式
+      // 处理新后端 API 的错误格式（success: false, error: string）
+      if (data.success === false && data.error) {
+        return new Error(data.error)
+      }
+      
+      // 处理后端API的标准错误格式（旧格式）
       if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
         // 合并所有错误消息
         const messages = data.messages.map((msg: any) => msg.description || msg.code).join('; ')
@@ -692,9 +892,26 @@ export class ApiClient {
         return new Error(data.message)
       }
 
-      // 处理isSuccess为false的情况
+      // 处理isSuccess为false的情况（旧格式）
       if (data.isSuccess === false) {
         return new Error(data.error || '操作失败')
+      }
+    }
+    
+    // 处理 HTTP 状态码错误
+    if (error.response?.status) {
+      const status = error.response.status
+      if (status === 401) {
+        return new Error('未认证，请先登录')
+      }
+      if (status === 403) {
+        return new Error('权限不足')
+      }
+      if (status === 404) {
+        return new Error('资源不存在')
+      }
+      if (status === 500) {
+        return new Error('服务器内部错误')
       }
     }
     
@@ -770,6 +987,8 @@ export const backendApi = {
     login: (request: LoginRequest) => apiClient.login(request),
     register: (request: RegisterRequest) => apiClient.register(request),
     logout: () => apiClient.logout(),
+    // 新后端：自动注册临时账号
+    autoRegister: (request?: AutoRegisterRequest) => apiClient.autoRegister(request),
   },
   
   // 绝缘子缺陷检测（Roboflow）
@@ -785,6 +1004,30 @@ export const backendApi = {
   nestDetection: {
     byBase64: (imageBase64: string) => apiClient.detectNestByBase64(imageBase64),
     byImage: (file: File) => apiClient.detectNestByImage(file),
+  },
+  
+  // 新后端：检测相关 API
+  inspection: {
+    // 图片检测（文件上传）
+    detectByFile: (file: File) => apiClient.inspectionDetectByFile(file),
+    // 图片检测（Base64）
+    detectByBase64: (imageBase64: string) => apiClient.inspectionDetectByBase64(imageBase64),
+    // 获取检测记录列表
+    getRecords: (query?: InspectionRecordsQuery) => apiClient.getInspectionRecords(query),
+    // 获取单个检测记录
+    getRecord: (id: string) => apiClient.getInspectionRecord(id),
+    // 更新检测记录状态
+    updateRecordStatus: (id: string, status: UpdateRecordStatusRequest) => 
+      apiClient.updateInspectionRecordStatus(id, status),
+  },
+  
+  // 新后端：统计相关 API
+  statistics: {
+    // 获取统计数据
+    get: (period?: StatisticsPeriod) => apiClient.getStatistics(period),
+    // 获取置信度分布详情
+    getDistribution: (period?: StatisticsPeriod, bins?: number) => 
+      apiClient.getConfidenceDistribution(period, bins),
   },
   
   // 用户档案
