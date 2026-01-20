@@ -306,6 +306,12 @@ function SettingsPageContent() {
       onClick: () => handleNavigation('detect')
     },
     {
+      key: 'nest-detection',
+      icon: <HomeOutlined />,
+      label: '鸟巢检测',
+      onClick: () => handleNavigation('nest-detection')
+    },
+    {
       key: 'settings',
       icon: <SettingOutlined />,
       label: t.systemSettings,

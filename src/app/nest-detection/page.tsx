@@ -77,7 +77,7 @@ const defaultDarkTheme: ThemeData = {
   algorithm: 'dark',
 }
 
-export default function InsulatorDetectionPage() {
+export default function NestDetectionPage() {
   const router = useRouter()
   const { isAuthenticated, user, updateUser } = useAuthStore()
   const [collapsed, setCollapsed] = useState(false)
@@ -170,6 +170,12 @@ export default function InsulatorDetectionPage() {
       key: 'detect',
       icon: <ThunderboltOutlined />,
       label: '绝缘子检测',
+      onClick: () => handleNavigation('detect')
+    },
+    {
+      key: 'nest-detection',
+      icon: <HomeOutlined />,
+      label: '鸟巢检测',
     },
     {
       key: 'settings',
@@ -294,7 +300,7 @@ export default function InsulatorDetectionPage() {
     input.click()
   }
 
-  // 绝缘子缺陷检测
+  // 鸟巢检测
   const handleDetection = async () => {
     console.log('开始检测，当前选中文件:', selectedFile)
     
@@ -317,7 +323,7 @@ export default function InsulatorDetectionPage() {
     setActiveTab('1')
 
     try {
-      console.log('开始绝缘子缺陷检测，文件信息:', {
+      console.log('开始鸟巢检测，文件信息:', {
         name: selectedFile.name,
         size: selectedFile.size,
         type: selectedFile.type
@@ -331,7 +337,7 @@ export default function InsulatorDetectionPage() {
       // 记录请求数据
       setRequestData({
         method: 'POST',
-        url: 'https://serverless.roboflow.com/insulator-defect-c1kcs/1',
+        url: 'https://serverless.roboflow.com/birdnest-aqzoi-gelsg/1',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
@@ -347,8 +353,8 @@ export default function InsulatorDetectionPage() {
         }
       })
       
-      // 使用Roboflow API进行检测
-      const response: DetectResponse = await backendApi.detect.byImage(selectedFile)
+      // 使用Roboflow API进行鸟巢检测
+      const response: DetectResponse = await backendApi.nestDetection.byImage(selectedFile)
       
       console.log('检测响应:', response)
       
@@ -357,9 +363,9 @@ export default function InsulatorDetectionPage() {
 
       if (response.isSuccess && response.infos) {
         setDetectionResults(response.infos)
-        console.log(`检测成功！识别到 ${response.infos.length} 个缺陷`)
+        console.log(`检测成功！识别到 ${response.infos.length} 个鸟巢`)
       } else {
-        const errorMessage = response.messages?.[0]?.description || '绝缘子缺陷检测失败'
+        const errorMessage = response.messages?.[0]?.description || '鸟巢检测失败'
         setError(errorMessage)
         message.error(errorMessage)
         console.error('检测失败:', errorMessage)
@@ -374,7 +380,7 @@ export default function InsulatorDetectionPage() {
         errorMsg = '认证失败，请稍后重试'
         message.error(errorMsg)
       } else if (error.message?.includes('识别失败')) {
-        errorMsg = '图片中未能识别出缺陷，请确保：\n1. 图片中包含清晰可见的绝缘子\n2. 绝缘子没有被遮挡\n3. 图片光线充足、对比度良好'
+        errorMsg = '图片中未能识别出鸟巢，请确保：\n1. 图片中包含清晰可见的鸟巢\n2. 鸟巢没有被遮挡\n3. 图片光线充足、对比度良好'
         message.error(errorMsg)
       } else if (error.message?.includes('文件太大') || error.message?.includes('400')) {
         errorMsg = '图片处理失败，请尝试使用更小或质量更好的图片文件'
@@ -526,17 +532,17 @@ export default function InsulatorDetectionPage() {
               borderBottom: '1px solid rgba(255,255,255,0.1)',
               paddingBottom: 16
             }}>
-              <ThunderboltOutlined style={{ fontSize: '24px', color: '#fff' }} />
+              <HomeOutlined style={{ fontSize: '24px', color: '#fff' }} />
               {!collapsed && (
                 <Title level={4} style={{ margin: '0 0 0 12px', color: '#fff', fontSize: '16px' }}>
-                  绝缘子检测
+                  鸟巢检测
                 </Title>
               )}
             </div>
             <Menu
               theme="dark"
               mode="inline"
-              defaultSelectedKeys={['detect']}
+              defaultSelectedKeys={['nest-detection']}
               items={sideMenuItems}
               style={{ 
                 borderRight: 0,
@@ -587,7 +593,7 @@ export default function InsulatorDetectionPage() {
                       title: <HomeOutlined />
                     },
                     {
-                      title: '绝缘子检测'
+                      title: '鸟巢检测'
                     }
                   ]}
                 />
@@ -632,10 +638,10 @@ export default function InsulatorDetectionPage() {
             }}>
               <div style={{ marginBottom: '24px' }}>
                 <Title level={2} style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
-                  <ThunderboltOutlined style={{ marginRight: '12px', color: currentTheme.colorPrimary }} />
-                  绝缘子缺陷检测
+                  <HomeOutlined style={{ marginRight: '12px', color: currentTheme.colorPrimary }} />
+                  鸟巢检测
                 </Title>
-                <Text type="secondary">上传图片，智能检测绝缘子缺陷</Text>
+                <Text type="secondary">上传图片，智能检测鸟巢</Text>
               </div>
 
               {/* 左右对称布局 */}
@@ -812,12 +818,12 @@ export default function InsulatorDetectionPage() {
                             
                             // 根据class和color字段判断类型
                             const className = (result.class || '').toLowerCase()
-                            const isInsulator = className === 'insulator' || className === 'insulators' || className.includes('insulator')
-                            // 如果不是绝缘子，则默认为缺陷
-                            const isDefect = !isInsulator || result.color === 'red'
+                            const isNest = className === 'nest' || className === 'nests' || className.includes('nest')
+                            // 如果不是鸟巢，则默认为其他物体
+                            const isOther = !isNest || result.color === 'red'
                             
-                            // 缺陷用红色，绝缘子用蓝色
-                            const boxColor = isDefect ? '#ff4d4f' : '#1890ff'
+                            // 其他物体用红色，鸟巢用蓝色
+                            const boxColor = isOther ? '#ff4d4f' : '#1890ff'
                             const confidence = result.confidence || 0
                             
                             return (
@@ -900,7 +906,7 @@ export default function InsulatorDetectionPage() {
                             fontSize: '12px',
                             color: isDark ? '#95de64' : '#389e0d'
                           }}>
-                            ✓ 图片已准备就绪，点击&quot;开始检测&quot;即可检测绝缘子缺陷
+                            ✓ 图片已准备就绪，点击&quot;开始检测&quot;即可检测鸟巢
                           </div>
                         )}
                       </div>
@@ -968,9 +974,9 @@ export default function InsulatorDetectionPage() {
                                         }}>
                                           <strong>💡 检测建议：</strong>
                                           <ul style={{ margin: '4px 0', paddingLeft: '16px' }}>
-                                            <li>确保绝缘子清晰可见，没有反光或模糊</li>
-                                            <li>拍摄时保持适当距离，绝缘子占图片合适比例</li>
-                                            <li>避免绝缘子被遮挡（如支架、污渍等）</li>
+                                            <li>确保鸟巢清晰可见，没有反光或模糊</li>
+                                            <li>拍摄时保持适当距离，鸟巢占图片合适比例</li>
+                                            <li>避免鸟巢被遮挡（如树枝、树叶等）</li>
                                             <li>在光线充足的环境下拍摄</li>
                                             <li>尽量保持图片水平，避免过度倾斜</li>
                                           </ul>
@@ -1006,13 +1012,13 @@ export default function InsulatorDetectionPage() {
                                     renderItem={(result, index) => {
                                       // 判断类型
                                       const className = (result.class || '').toLowerCase()
-                                      const isInsulator = className === 'insulator' || className === 'insulators' || className.includes('insulator')
-                                      // 如果不是绝缘子，则默认为缺陷
-                                      const isDefect = !isInsulator || result.color === 'red'
+                                      const isNest = className === 'nest' || className === 'nests' || className.includes('nest')
+                                      // 如果不是鸟巢，则默认为其他物体
+                                      const isOther = !isNest || result.color === 'red'
                                       
-                                      const typeLabel = isInsulator ? '绝缘子' : '缺陷'
-                                      const typeColor = isInsulator ? 'blue' : 'red'
-                                      const itemTitle = isInsulator ? `绝缘子 #${index + 1}` : `缺陷 #${index + 1}`
+                                      const typeLabel = isNest ? '鸟巢' : '其他'
+                                      const typeColor = isNest ? 'blue' : 'red'
+                                      const itemTitle = isNest ? `鸟巢 #${index + 1}` : `其他 #${index + 1}`
                                       
                                       return (
                                         <List.Item 
@@ -1029,7 +1035,7 @@ export default function InsulatorDetectionPage() {
                                             avatar={
                                               <FileImageOutlined style={{ 
                                                 fontSize: '24px', 
-                                                color: isInsulator ? '#1890ff' : '#ff4d4f'
+                                                color: isNest ? '#1890ff' : '#ff4d4f'
                                               }} />
                                             }
                                             title={

@@ -371,6 +371,49 @@ export class ApiClient {
     }
   }
 
+  // ============ Roboflow鸟巢检测API ============
+
+  /**
+   * Roboflow鸟巢检测（使用Base64图片）
+   * POST https://serverless.roboflow.com/birdnest-aqzoi-gelsg/1
+   */
+  async detectNestByBase64(imageBase64: string): Promise<DetectResponse> {
+    try {
+      const ROBOFLOW_URL = 'https://serverless.roboflow.com/birdnest-aqzoi-gelsg/1'
+      const ROBOFLOW_API_KEY = 'cW6r5HCK2OL5sVo7ymUO'
+      
+      const response = await axios.post(ROBOFLOW_URL, imageBase64, {
+        params: {
+          api_key: ROBOFLOW_API_KEY
+        },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        timeout: 30000
+      })
+      
+      // 转换Roboflow响应格式为DetectResponse格式
+      return this.convertRoboflowResponse(response.data)
+    } catch (error: any) {
+      throw this.handleError(error, '鸟巢检测失败')
+    }
+  }
+
+  /**
+   * Roboflow鸟巢检测（使用图片文件）
+   */
+  async detectNestByImage(file: File): Promise<DetectResponse> {
+    try {
+      // 将文件转换为Base64（纯base64数据，不含data:image前缀）
+      const base64 = await this.fileToBase64(file)
+      // 移除data:image/xxx;base64,前缀，只保留base64数据
+      const base64Data = base64.split(',')[1] || base64
+      return await this.detectNestByBase64(base64Data)
+    } catch (error: any) {
+      throw this.handleError(error, '鸟巢检测失败')
+    }
+  }
+
   // ============ 车牌检测API ============
 
   /**
@@ -736,6 +779,12 @@ export const backendApi = {
     // 保留原有的车牌检测方法（如果需要）
     plateByBase64: (imageBase64: string) => apiClient.detectPlateByBase64(imageBase64),
     plateByImage: (file: File) => apiClient.detectPlateByImage(file),
+  },
+  
+  // 鸟巢检测（Roboflow）
+  nestDetection: {
+    byBase64: (imageBase64: string) => apiClient.detectNestByBase64(imageBase64),
+    byImage: (file: File) => apiClient.detectNestByImage(file),
   },
   
   // 用户档案
