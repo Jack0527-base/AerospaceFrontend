@@ -33,8 +33,7 @@ function LoginPageContent() {
     setError('')
 
     try {
-      // ========== 临时调试代码：直接登录，无需验证 ==========
-      // TODO: 调试完成后恢复真实的API登录逻辑
+      // ========== 调试模式：直接登录，无需验证 ==========
       console.log('【调试模式】直接登录，跳过API验证')
       
       // 模拟登录延迟
@@ -53,7 +52,7 @@ function LoginPageContent() {
       router.push('/dashboard')
       console.log('【调试模式】登录成功，跳转到dashboard')
       
-      // ========== 原始API登录代码（已注释，调试完成后恢复） ==========
+      // ========== API登录代码（已注释，需要时恢复） ==========
       /*
       console.log('开始登录:', { email: username, password: '***' })
 

@@ -8,14 +8,6 @@ const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'] }
 export const metadata: Metadata = {
   title: '循翼 Aerotrace',
   description: '循翼 Aerotrace - 专业的电力巡检解决方案',
-  icons: {
-    icon: [
-      { url: '/icon.png', sizes: 'any' },
-      { url: '/favicon.ico', sizes: 'any' },
-    ],
-    shortcut: '/favicon.ico',
-    apple: '/icon.png',
-  },
 }
 
 export default function RootLayout({

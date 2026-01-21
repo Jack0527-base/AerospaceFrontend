@@ -56,6 +56,7 @@ import {
   SystemStatusCard
 } from '@/components/dashboard'
 import { AvatarUpload } from '@/components/avatar-upload'
+import { getI18nText, getCurrentLanguage, setLanguage, type Language } from '@/lib/i18n'
 
 const { Header, Sider, Content } = Layout
 const { Title } = Typography
@@ -86,83 +87,13 @@ const defaultDarkTheme: ThemeData = {
   algorithm: 'dark',
 }
 
-// 国际化文本
-const i18nTexts = {
-  zh: {
-    // 菜单项
-    dashboard: '仪表盘',
-    carRecognition: '绝缘子检测',
-    configCheck: '配置检查',
-    backendDemo: '后端演示',
-    systemSettings: '系统设置',
-    aboutUs: '关于我们',
-    
-    // 用户菜单
-    profile: '个人资料',
-    logout: '退出登录',
-    
-    // 欢迎区域
-    welcomeBack: '欢迎回来',
-    admin: '管理员',
-    online: '在线',
-    
-    // 统计卡片
-    todayRecognition: '今日检测',
-    averageConfidence: '平均置信度',
-    onlineDevices: '在线设备',
-    inspectedLines: '已巡检线路',
-    
-    // 系统状态
-    systemStatus: '系统状态',
-    cpuUsage: 'CPU使用率',
-    memoryUsage: '内存使用率',
-    diskUsage: '磁盘使用率',
-    
-    // 面包屑
-    overview: '概览'
-  },
-  en: {
-    // 菜单项
-    dashboard: 'Dashboard',
-    carRecognition: 'Insulator Detection',
-    configCheck: 'Config Check',
-    backendDemo: 'Backend Demo',
-    systemSettings: 'System Settings',
-    aboutUs: 'About Us',
-    
-    // 用户菜单
-    profile: 'Profile',
-    logout: 'Logout',
-    
-    // 欢迎区域
-    welcomeBack: 'Welcome back',
-    admin: 'Admin',
-    online: 'Online',
-    
-    // 统计卡片
-    todayRecognition: "Today's Detection",
-    averageConfidence: 'Average Confidence',
-    onlineDevices: 'Online Devices',
-    inspectedLines: 'Inspected Lines',
-    
-    // 系统状态
-    systemStatus: 'System Status',
-    cpuUsage: 'CPU Usage',
-    memoryUsage: 'Memory Usage',
-    diskUsage: 'Disk Usage',
-    
-    // 面包屑
-    overview: 'Overview'
-  }
-}
-
 export default function DashboardPage() {
   const router = useRouter()
   const { isAuthenticated, user, logout, updateUser } = useAuthStore()
   const [collapsed, setCollapsed] = useState(false)
   const [currentTheme, setCurrentTheme] = useState<ThemeData>(defaultLightTheme)
   const [locale, setLocale] = useState<Locale>(zhCN)
-  const [currentLang, setCurrentLang] = useState<'zh' | 'en'>('zh')
+  const [currentLang, setCurrentLang] = useState<Language>(getCurrentLanguage())
   
   // 添加系统状态数据状态
   const [systemStatus, setSystemStatus] = useState<SystemStatusState>({
@@ -229,18 +160,17 @@ export default function DashboardPage() {
   useEffect(() => {
     // 从localStorage恢复主题和语言设置
     const savedTheme = localStorage.getItem('themeMode')
-    const savedLang = localStorage.getItem('language')
+    const lang = getCurrentLanguage()
     
     if (savedTheme === 'dark') {
       setCurrentTheme(defaultDarkTheme)
     }
     
-    if (savedLang === 'en') {
-      setCurrentLang('en')
+    setCurrentLang(lang)
+    if (lang === 'en') {
       setLocale(enUS)
       dayjs.locale('en')
     } else {
-      setCurrentLang('zh')
       setLocale(zhCN)
       dayjs.locale('zh-cn')
     }
@@ -265,7 +195,10 @@ export default function DashboardPage() {
   const handleNavigation = (path: string) => {
     switch(path) {
       case 'detect':
-        router.push('/detect')
+        router.push('/insulator-detection')
+        break
+      case 'nest-detection':
+        router.push('/nest-detection')
         break
       case 'settings/user':
         router.push('/settings?type=user')
@@ -281,18 +214,35 @@ export default function DashboardPage() {
     }
   }
 
+  // 处理菜单项点击
+  const handleMenuClick = ({ key }: { key: string }) => {
+    console.log('Menu clicked:', key)
+    if (key === 'dashboard') {
+      // 已经在仪表盘页面，不需要跳转
+      return
+    } else if (key === 'detect') {
+      router.push('/insulator-detection')
+    } else if (key === 'nest-detection') {
+      router.push('/nest-detection')
+    } else if (key === 'aboutus') {
+      window.open('https://aboutus.rth2.xyz/about.html', '_blank')
+    } else if (key.startsWith('settings/')) {
+      const type = key.split('/')[1]
+      router.push(`/settings?type=${type}`)
+    }
+  }
+
   const handleLanguageChange = (e: RadioChangeEvent) => {
-    const lang = e.target.value
+    const lang = e.target.value as Language
     setCurrentLang(lang)
+    setLanguage(lang) // 保存到localStorage
     
     if (lang === 'en') {
       setLocale(enUS)
       dayjs.locale('en')
-      localStorage.setItem('language', 'en')
     } else {
       setLocale(zhCN)
       dayjs.locale('zh-cn')
-      localStorage.setItem('language', 'zh')
     }
   }
 
@@ -302,7 +252,7 @@ export default function DashboardPage() {
     localStorage.setItem('themeMode', newTheme.algorithm)
   }
 
-  const t = i18nTexts[currentLang]
+  const t = getI18nText(currentLang)
   const isDark = currentTheme.algorithm === 'dark'
 
   // 用户下拉菜单
@@ -310,7 +260,7 @@ export default function DashboardPage() {
     {
       key: 'settings',
       icon: <UserOutlined />,
-      label: '用户设置',
+      label: t.userSettings,
       onClick: () => handleNavigation('settings/user')
     },
     {
@@ -340,13 +290,11 @@ export default function DashboardPage() {
       key: 'detect',
       icon: <ThunderboltOutlined />,
       label: t.carRecognition,
-      onClick: () => handleNavigation('detect')
     },
     {
       key: 'nest-detection',
       icon: <HomeOutlined />,
-      label: '鸟巢检测',
-      onClick: () => handleNavigation('nest-detection')
+      label: t.nestDetection,
     },
     {
       key: 'settings',
@@ -356,14 +304,12 @@ export default function DashboardPage() {
         {
           key: 'settings/user',
           icon: <UserOutlined />,
-          label: '用户设置',
-          onClick: () => handleNavigation('settings/user')
+          label: t.userSettings,
         },
         {
           key: 'settings/general',
           icon: <GlobalOutlined />,
-          label: '通用设置',
-          onClick: () => handleNavigation('settings/general')
+          label: t.generalSettings,
         }
       ]
     },
@@ -371,7 +317,6 @@ export default function DashboardPage() {
       key: 'aboutus',
       icon: <QuestionCircleOutlined />,
       label: t.aboutUs,
-      onClick: () => handleNavigation('aboutus')
     }
   ]
   
@@ -481,6 +426,7 @@ export default function DashboardPage() {
               mode="inline"
               defaultSelectedKeys={['dashboard']}
               items={sideMenuItems}
+              onClick={handleMenuClick}
               style={{ 
                 borderRight: 0,
                 background: 'transparent'

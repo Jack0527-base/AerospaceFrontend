@@ -168,6 +168,28 @@ export type BackendApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorRespon
 
 // ============ 认证相关类型（新后端） ============
 
+// 用户信息（新后端API格式）
+export interface BackendUser {
+  id: string
+  email: string
+  name: string | null
+  role: 'USER' | 'ADMIN' | 'INSPECTOR'
+  isTemporary?: boolean
+  createdAt?: string
+}
+
+// 登录响应数据（新后端API格式）
+export interface LoginResponseData {
+  user: BackendUser
+  message: string
+}
+
+// 注册响应数据（新后端API格式）
+export interface RegisterResponseData {
+  user: BackendUser
+  message: string
+}
+
 // 自动注册临时账号请求
 export interface AutoRegisterRequest {
   deviceId?: string

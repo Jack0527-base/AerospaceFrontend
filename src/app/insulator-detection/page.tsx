@@ -46,6 +46,7 @@ import {
   UserOutlined,
   GlobalOutlined
 } from '@ant-design/icons'
+import { getI18nText, getCurrentLanguage, type Language } from '@/lib/i18n'
 
 const { Header, Sider, Content } = Layout
 const { Title, Text } = Typography
@@ -82,6 +83,7 @@ export default function InsulatorDetectionPage() {
   const { isAuthenticated, user, updateUser } = useAuthStore()
   const [collapsed, setCollapsed] = useState(false)
   const [currentTheme, setCurrentTheme] = useState<ThemeData>(defaultLightTheme)
+  const [currentLang, setCurrentLang] = useState<Language>(getCurrentLanguage())
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string>('')
@@ -141,11 +143,14 @@ export default function InsulatorDetectionPage() {
   }, [previewUrl])
 
   const isDark = currentTheme.algorithm === 'dark'
+  const t = getI18nText(currentLang)
 
   const handleNavigation = (path: string) => {
     if (path.startsWith('settings/')) {
       const type = path.split('/')[1]
       router.push(`/settings?type=${type}`)
+    } else if (path === 'detect') {
+      router.push('/insulator-detection')
     } else {
       router.push(`/${path}`)
     }
@@ -163,35 +168,35 @@ export default function InsulatorDetectionPage() {
     {
       key: 'dashboard',
       icon: <DashboardOutlined />,
-      label: '仪表盘',
+      label: t.dashboard,
       onClick: () => handleNavigation('dashboard')
     },
     {
       key: 'detect',
       icon: <ThunderboltOutlined />,
-      label: '绝缘子检测',
+      label: t.carRecognition,
     },
     {
       key: 'nest-detection',
       icon: <HomeOutlined />,
-      label: '鸟巢检测',
+      label: t.nestDetection,
       onClick: () => handleNavigation('nest-detection')
     },
     {
       key: 'settings',
       icon: <SettingOutlined />,
-      label: '系统设置',
+      label: t.systemSettings,
       children: [
         {
           key: 'settings/user',
           icon: <UserOutlined />,
-          label: '用户设置',
+          label: t.userSettings,
           onClick: () => handleNavigation('settings/user')
         },
         {
           key: 'settings/general',
           icon: <GlobalOutlined />,
-          label: '通用设置',
+          label: t.generalSettings,
           onClick: () => handleNavigation('settings/general')
         }
       ]
@@ -199,7 +204,7 @@ export default function InsulatorDetectionPage() {
     {
       key: 'aboutus',
       icon: <QuestionCircleOutlined />,
-      label: '关于我们',
+      label: t.aboutUs,
       onClick: () => handleNavigation('aboutus')
     }
   ]
@@ -535,7 +540,7 @@ export default function InsulatorDetectionPage() {
               <ThunderboltOutlined style={{ fontSize: '24px', color: '#fff' }} />
               {!collapsed && (
                 <Title level={4} style={{ margin: '0 0 0 12px', color: '#fff', fontSize: '16px' }}>
-                  绝缘子检测
+                  {t.carRecognition}
                 </Title>
               )}
             </div>
@@ -593,7 +598,7 @@ export default function InsulatorDetectionPage() {
                       title: <HomeOutlined />
                     },
                     {
-                      title: '绝缘子检测'
+                      title: t.carRecognition
                     }
                   ]}
                 />
@@ -639,9 +644,9 @@ export default function InsulatorDetectionPage() {
               <div style={{ marginBottom: '24px' }}>
                 <Title level={2} style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
                   <ThunderboltOutlined style={{ marginRight: '12px', color: currentTheme.colorPrimary }} />
-                  绝缘子缺陷检测
+                  {t.insulatorDetectionTitle}
                 </Title>
-                <Text type="secondary">上传图片，智能检测绝缘子缺陷</Text>
+                <Text type="secondary">{t.insulatorDetectionSubtitle}</Text>
               </div>
 
               {/* 左右对称布局 */}
@@ -705,17 +710,17 @@ export default function InsulatorDetectionPage() {
                             fontWeight: 500,
                             color: isDark ? '#ffffff' : '#000000d9'
                           }}>
-                            点击或拖拽文件到此区域上传
+                            {t.clickOrDrag}
                           </p>
                           <p style={{
                             color: isDark ? '#8c8c8c' : '#666',
                             fontSize: '14px',
                             margin: 0
                           }}>
-                            支持 jpg、png、jpeg 格式，推荐文件大小小于 3MB
+                            {t.supportedFormats}
                             <br />
                             <span style={{ fontSize: '12px', color: isDark ? '#666' : '#999' }}>
-                              大文件将自动优化处理以确保最佳识别效果
+                              {t.largeFileNotice}
                             </span>
                           </p>
                         </div>
@@ -741,15 +746,15 @@ export default function InsulatorDetectionPage() {
                             fontSize: '13px'
                           }}>
                             <div style={{ marginBottom: '4px' }}>
-                              <Text strong>文件名：</Text>
+                              <Text strong>{t.fileName}：</Text>
                               <Text>{selectedFile.name}</Text>
                             </div>
                             <div style={{ marginBottom: '4px' }}>
-                              <Text strong>大小：</Text>
+                              <Text strong>{t.fileSize}：</Text>
                               <Text>{(selectedFile.size / 1024).toFixed(2)} KB</Text>
                             </div>
                             <div>
-                              <Text strong>类型：</Text>
+                              <Text strong>{t.fileType}：</Text>
                               <Text>{selectedFile.type}</Text>
                             </div>
                           </div>
@@ -880,7 +885,7 @@ export default function InsulatorDetectionPage() {
                               height: '40px'
                             }}
                           >
-                            {isDetecting ? '识别中...' : '开始识别'}
+                            {isDetecting ? t.detecting : t.startDetection}
                           </Button>
                           
                           <Button
@@ -891,7 +896,7 @@ export default function InsulatorDetectionPage() {
                               height: '40px'
                             }}
                           >
-                            清空
+                            {t.clear}
                           </Button>
                         </Space>
                         
@@ -906,7 +911,7 @@ export default function InsulatorDetectionPage() {
                             fontSize: '12px',
                             color: isDark ? '#95de64' : '#389e0d'
                           }}>
-                            ✓ 图片已准备就绪，点击&quot;开始检测&quot;即可检测绝缘子缺陷
+                            ✓ {t.insulatorDetectionReady}
                           </div>
                         )}
                       </div>
@@ -950,7 +955,7 @@ export default function InsulatorDetectionPage() {
                       items={[
                         {
                           key: '1',
-                          label: '识别结果',
+                          label: t.detectionResults,
                           children: (
                             <div style={{ 
                               padding: '24px',
@@ -959,7 +964,7 @@ export default function InsulatorDetectionPage() {
                             }}>
                               {error && (
                                 <Alert
-                                  message="识别失败"
+                                  message={t.detectionFailed}
                                   description={
                                     <div>
                                       <div style={{ marginBottom: '8px' }}>{error}</div>
@@ -972,13 +977,11 @@ export default function InsulatorDetectionPage() {
                                           fontSize: '12px',
                                           marginTop: '8px'
                                         }}>
-                                          <strong>💡 检测建议：</strong>
+                                          <strong>💡 {t.detectionTips}：</strong>
                                           <ul style={{ margin: '4px 0', paddingLeft: '16px' }}>
-                                            <li>确保绝缘子清晰可见，没有反光或模糊</li>
-                                            <li>拍摄时保持适当距离，绝缘子占图片合适比例</li>
-                                            <li>避免绝缘子被遮挡（如支架、污渍等）</li>
-                                            <li>在光线充足的环境下拍摄</li>
-                                            <li>尽量保持图片水平，避免过度倾斜</li>
+                                            {t.insulatorDetectionTips.map((tip, index) => (
+                                              <li key={index}>{tip}</li>
+                                            ))}
                                           </ul>
                                         </div>
                                       )}
@@ -1003,7 +1006,7 @@ export default function InsulatorDetectionPage() {
                                       marginRight: '8px'
                                     }} />
                                     <Text strong style={{ fontSize: '16px' }}>
-                                      检测结果 ({detectionResults.length} 个检测项)
+                                      {t.detectionResults} ({detectionResults.length} {t.detectedItems})
                                     </Text>
                                   </div>
                                   
@@ -1016,9 +1019,9 @@ export default function InsulatorDetectionPage() {
                                       // 如果不是绝缘子，则默认为缺陷
                                       const isDefect = !isInsulator || result.color === 'red'
                                       
-                                      const typeLabel = isInsulator ? '绝缘子' : '缺陷'
+                                      const typeLabel = isInsulator ? t.insulator : t.defect
                                       const typeColor = isInsulator ? 'blue' : 'red'
-                                      const itemTitle = isInsulator ? `绝缘子 #${index + 1}` : `缺陷 #${index + 1}`
+                                      const itemTitle = isInsulator ? `${t.insulator} #${index + 1}` : `${t.defect} #${index + 1}`
                                       
                                       return (
                                         <List.Item 
@@ -1049,15 +1052,15 @@ export default function InsulatorDetectionPage() {
                                             description={
                                               <div>
                                                 <div style={{ marginBottom: '8px' }}>
-                                                  <Text type="secondary">置信度: </Text>
+                                                  <Text type="secondary">{t.confidence}: </Text>
                                                   <Text style={{ marginLeft: '4px', fontWeight: 500 }}>
-                                                    {result.confidence ? `${result.confidence}%` : '未知'}
+                                                    {result.confidence ? `${result.confidence}%` : (currentLang === 'en' ? 'Unknown' : '未知')}
                                                   </Text>
                                                 </div>
                                                 {result.rect && (
                                                   <Text type="secondary" style={{ fontSize: '12px' }}>
-                                                    位置: ({result.rect.x}, {result.rect.y}) | 
-                                                    尺寸: {result.rect.width} × {result.rect.height}
+                                                    {t.position}: ({result.rect.x}, {result.rect.y}) | 
+                                                    {t.size}: {result.rect.width} × {result.rect.height}
                                                   </Text>
                                                 )}
                                               </div>
@@ -1086,7 +1089,7 @@ export default function InsulatorDetectionPage() {
                                     marginBottom: '16px',
                                     color: '#ccc'
                                   }} />
-                                  <p style={{ fontSize: '16px', margin: 0 }}>暂无检测数据</p>
+                                  <p style={{ fontSize: '16px', margin: 0 }}>{t.noDetectionData}</p>
                                 </div>
                               )}
                             </div>
@@ -1129,7 +1132,7 @@ export default function InsulatorDetectionPage() {
                                     marginBottom: '16px',
                                     color: '#ccc'
                                   }} />
-                                  <p style={{ fontSize: '16px', margin: 0 }}>暂无请求数据</p>
+                                  <p style={{ fontSize: '16px', margin: 0 }}>{t.noRequestData}</p>
                                 </div>
                               )}
                             </div>
@@ -1137,7 +1140,7 @@ export default function InsulatorDetectionPage() {
                         },
                         {
                           key: '3',
-                          label: 'Response',
+                          label: t.response,
                           children: (
                             <div style={{ 
                               padding: '24px',
@@ -1179,7 +1182,7 @@ export default function InsulatorDetectionPage() {
                                     marginBottom: '16px',
                                     color: '#ccc'
                                   }} />
-                                  <p style={{ fontSize: '16px', margin: 0 }}>暂无响应数据</p>
+                                  <p style={{ fontSize: '16px', margin: 0 }}>{t.noResponseData}</p>
                                 </div>
                               )}
                             </div>

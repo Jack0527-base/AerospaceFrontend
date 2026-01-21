@@ -18,7 +18,7 @@ export default function Navigation() {
 
   const navItems = [
     { href: '/dashboard', label: '仪表盘', icon: Home },
-    { href: '/detect', label: '绝缘子检测', icon: Search },
+    { href: '/insulator-detection', label: '绝缘子检测', icon: Search },
     { href: '/history', label: '历史记录', icon: History },
     { href: '/settings', label: '设置', icon: Settings },
   ];

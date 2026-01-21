@@ -280,6 +280,8 @@ function SettingsPageContent() {
     if (path.startsWith('settings/')) {
       const type = path.split('/')[1]
       router.push(`/settings?type=${type}`)
+    } else if (path === 'detect') {
+      router.push('/insulator-detection')
     } else {
       router.push(`/${path}`)
     }

@@ -46,6 +46,7 @@ import {
   UserOutlined,
   GlobalOutlined
 } from '@ant-design/icons'
+import { getI18nText, getCurrentLanguage, type Language } from '@/lib/i18n'
 
 const { Header, Sider, Content } = Layout
 const { Title, Text } = Typography
@@ -82,11 +83,12 @@ export default function NestDetectionPage() {
   const { isAuthenticated, user, updateUser } = useAuthStore()
   const [collapsed, setCollapsed] = useState(false)
   const [currentTheme, setCurrentTheme] = useState<ThemeData>(defaultLightTheme)
+  const [currentLang, setCurrentLang] = useState<Language>(getCurrentLanguage())
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string>('')
   const [isDetecting, setIsDetecting] = useState(false)
-  const [detectionResults, setDetectionResults] = useState<PlateInfo[]>([]) // 暂时使用PlateInfo类型，后续改为CrackInfo
+  const [detectionResults, setDetectionResults] = useState<PlateInfo[]>([]) // 暂时使用PlateInfo类型，后续可改为CrackInfo
   const [error, setError] = useState('')
   const [requestData, setRequestData] = useState<any>(null)
   const [responseData, setResponseData] = useState<any>(null)
@@ -117,11 +119,14 @@ export default function NestDetectionPage() {
     }
   }, [isAuthenticated, router, user, updateUser])
 
-  // 加载主题偏好
+  // 加载主题和语言偏好
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // 从localStorage恢复主题设置 - 与dashboard保持一致
       const savedTheme = localStorage.getItem('themeMode')
+      const lang = getCurrentLanguage()
+      
+      setCurrentLang(lang)
       
       if (savedTheme === 'dark') {
         setCurrentTheme(defaultDarkTheme)
@@ -141,13 +146,33 @@ export default function NestDetectionPage() {
   }, [previewUrl])
 
   const isDark = currentTheme.algorithm === 'dark'
+  const t = getI18nText(currentLang)
 
   const handleNavigation = (path: string) => {
     if (path.startsWith('settings/')) {
       const type = path.split('/')[1]
       router.push(`/settings?type=${type}`)
+    } else if (path === 'detect') {
+      router.push('/insulator-detection')
     } else {
       router.push(`/${path}`)
+    }
+  }
+
+  // 处理菜单项点击
+  const handleMenuClick = ({ key }: { key: string }) => {
+    console.log('Menu clicked:', key)
+    if (key === 'dashboard') {
+      router.push('/dashboard')
+    } else if (key === 'detect') {
+      router.push('/insulator-detection')
+    } else if (key === 'nest-detection') {
+      router.push('/nest-detection')
+    } else if (key === 'aboutus') {
+      router.push('/aboutus')
+    } else if (key.startsWith('settings/')) {
+      const type = key.split('/')[1]
+      router.push(`/settings?type=${type}`)
     }
   }
 
@@ -163,44 +188,39 @@ export default function NestDetectionPage() {
     {
       key: 'dashboard',
       icon: <DashboardOutlined />,
-      label: '仪表盘',
-      onClick: () => handleNavigation('dashboard')
+      label: t.dashboard,
     },
     {
       key: 'detect',
       icon: <ThunderboltOutlined />,
-      label: '绝缘子检测',
-      onClick: () => handleNavigation('detect')
+      label: t.carRecognition,
     },
     {
       key: 'nest-detection',
       icon: <HomeOutlined />,
-      label: '鸟巢检测',
+      label: t.nestDetection,
     },
     {
       key: 'settings',
       icon: <SettingOutlined />,
-      label: '系统设置',
+      label: t.systemSettings,
       children: [
         {
           key: 'settings/user',
           icon: <UserOutlined />,
-          label: '用户设置',
-          onClick: () => handleNavigation('settings/user')
+          label: t.userSettings,
         },
         {
           key: 'settings/general',
           icon: <GlobalOutlined />,
-          label: '通用设置',
-          onClick: () => handleNavigation('settings/general')
+          label: t.generalSettings,
         }
       ]
     },
     {
       key: 'aboutus',
       icon: <QuestionCircleOutlined />,
-      label: '关于我们',
-      onClick: () => handleNavigation('aboutus')
+      label: t.aboutUs,
     }
   ]
 
@@ -535,7 +555,7 @@ export default function NestDetectionPage() {
               <HomeOutlined style={{ fontSize: '24px', color: '#fff' }} />
               {!collapsed && (
                 <Title level={4} style={{ margin: '0 0 0 12px', color: '#fff', fontSize: '16px' }}>
-                  鸟巢检测
+                  {t.nestDetectionTitle}
                 </Title>
               )}
             </div>
@@ -543,7 +563,9 @@ export default function NestDetectionPage() {
               theme="dark"
               mode="inline"
               defaultSelectedKeys={['nest-detection']}
+              selectedKeys={['nest-detection']}
               items={sideMenuItems}
+              onClick={handleMenuClick}
               style={{ 
                 borderRight: 0,
                 background: 'transparent'
@@ -593,7 +615,7 @@ export default function NestDetectionPage() {
                       title: <HomeOutlined />
                     },
                     {
-                      title: '鸟巢检测'
+                      title: t.nestDetectionTitle
                     }
                   ]}
                 />
@@ -639,9 +661,9 @@ export default function NestDetectionPage() {
               <div style={{ marginBottom: '24px' }}>
                 <Title level={2} style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
                   <HomeOutlined style={{ marginRight: '12px', color: currentTheme.colorPrimary }} />
-                  鸟巢检测
+                  {t.nestDetectionTitle}
                 </Title>
-                <Text type="secondary">上传图片，智能检测鸟巢</Text>
+                <Text type="secondary">{t.nestDetectionSubtitle}</Text>
               </div>
 
               {/* 左右对称布局 */}
@@ -705,17 +727,17 @@ export default function NestDetectionPage() {
                             fontWeight: 500,
                             color: isDark ? '#ffffff' : '#000000d9'
                           }}>
-                            点击或拖拽文件到此区域上传
+                            {t.clickOrDrag}
                           </p>
                           <p style={{
                             color: isDark ? '#8c8c8c' : '#666',
                             fontSize: '14px',
                             margin: 0
                           }}>
-                            支持 jpg、png、jpeg 格式，推荐文件大小小于 3MB
+                            {t.supportedFormats}
                             <br />
                             <span style={{ fontSize: '12px', color: isDark ? '#666' : '#999' }}>
-                              大文件将自动优化处理以确保最佳识别效果
+                              {t.largeFileNotice}
                             </span>
                           </p>
                         </div>
@@ -741,15 +763,15 @@ export default function NestDetectionPage() {
                             fontSize: '13px'
                           }}>
                             <div style={{ marginBottom: '4px' }}>
-                              <Text strong>文件名：</Text>
+                              <Text strong>{t.fileName}：</Text>
                               <Text>{selectedFile.name}</Text>
                             </div>
                             <div style={{ marginBottom: '4px' }}>
-                              <Text strong>大小：</Text>
+                              <Text strong>{t.fileSize}：</Text>
                               <Text>{(selectedFile.size / 1024).toFixed(2)} KB</Text>
                             </div>
                             <div>
-                              <Text strong>类型：</Text>
+                              <Text strong>{t.fileType}：</Text>
                               <Text>{selectedFile.type}</Text>
                             </div>
                           </div>
@@ -818,12 +840,12 @@ export default function NestDetectionPage() {
                             
                             // 根据class和color字段判断类型
                             const className = (result.class || '').toLowerCase()
-                            const isNest = className === 'nest' || className === 'nests' || className.includes('nest')
+                            const isNest = className === 'nest' || className === 'birdnest' || className.includes('nest')
                             // 如果不是鸟巢，则默认为其他物体
                             const isOther = !isNest || result.color === 'red'
                             
                             // 其他物体用红色，鸟巢用蓝色
-                            const boxColor = isOther ? '#ff4d4f' : '#1890ff'
+                            const boxColor = isNest ? '#1890ff' : '#ff4d4f'
                             const confidence = result.confidence || 0
                             
                             return (
@@ -906,7 +928,7 @@ export default function NestDetectionPage() {
                             fontSize: '12px',
                             color: isDark ? '#95de64' : '#389e0d'
                           }}>
-                            ✓ 图片已准备就绪，点击&quot;开始检测&quot;即可检测鸟巢
+                            ✓ {t.nestDetectionReady}
                           </div>
                         )}
                       </div>
@@ -959,7 +981,7 @@ export default function NestDetectionPage() {
                             }}>
                               {error && (
                                 <Alert
-                                  message="识别失败"
+                                  message={t.detectionFailed}
                                   description={
                                     <div>
                                       <div style={{ marginBottom: '8px' }}>{error}</div>
@@ -972,13 +994,11 @@ export default function NestDetectionPage() {
                                           fontSize: '12px',
                                           marginTop: '8px'
                                         }}>
-                                          <strong>💡 检测建议：</strong>
+                                          <strong>💡 {t.detectionTips}：</strong>
                                           <ul style={{ margin: '4px 0', paddingLeft: '16px' }}>
-                                            <li>确保鸟巢清晰可见，没有反光或模糊</li>
-                                            <li>拍摄时保持适当距离，鸟巢占图片合适比例</li>
-                                            <li>避免鸟巢被遮挡（如树枝、树叶等）</li>
-                                            <li>在光线充足的环境下拍摄</li>
-                                            <li>尽量保持图片水平，避免过度倾斜</li>
+                                            {t.detectionTipsList.map((tip, index) => (
+                                              <li key={index}>{tip}</li>
+                                            ))}
                                           </ul>
                                         </div>
                                       )}
@@ -1003,7 +1023,7 @@ export default function NestDetectionPage() {
                                       marginRight: '8px'
                                     }} />
                                     <Text strong style={{ fontSize: '16px' }}>
-                                      检测结果 ({detectionResults.length} 个检测项)
+                                      {t.detectionResults} ({detectionResults.length} {t.detectedItems})
                                     </Text>
                                   </div>
                                   
@@ -1012,13 +1032,13 @@ export default function NestDetectionPage() {
                                     renderItem={(result, index) => {
                                       // 判断类型
                                       const className = (result.class || '').toLowerCase()
-                                      const isNest = className === 'nest' || className === 'nests' || className.includes('nest')
+                                      const isNest = className === 'nest' || className === 'birdnest' || className.includes('nest')
                                       // 如果不是鸟巢，则默认为其他物体
                                       const isOther = !isNest || result.color === 'red'
                                       
-                                      const typeLabel = isNest ? '鸟巢' : '其他'
+                                      const typeLabel = isNest ? t.nest : t.other
                                       const typeColor = isNest ? 'blue' : 'red'
-                                      const itemTitle = isNest ? `鸟巢 #${index + 1}` : `其他 #${index + 1}`
+                                      const itemTitle = isNest ? `${t.nest} #${index + 1}` : `${t.other} #${index + 1}`
                                       
                                       return (
                                         <List.Item 
@@ -1049,15 +1069,15 @@ export default function NestDetectionPage() {
                                             description={
                                               <div>
                                                 <div style={{ marginBottom: '8px' }}>
-                                                  <Text type="secondary">置信度: </Text>
+                                                  <Text type="secondary">{t.confidence}: </Text>
                                                   <Text style={{ marginLeft: '4px', fontWeight: 500 }}>
-                                                    {result.confidence ? `${result.confidence}%` : '未知'}
+                                                    {result.confidence ? `${result.confidence}%` : (currentLang === 'en' ? 'Unknown' : '未知')}
                                                   </Text>
                                                 </div>
                                                 {result.rect && (
                                                   <Text type="secondary" style={{ fontSize: '12px' }}>
-                                                    位置: ({result.rect.x}, {result.rect.y}) | 
-                                                    尺寸: {result.rect.width} × {result.rect.height}
+                                                    {t.position}: ({result.rect.x}, {result.rect.y}) | 
+                                                    {t.size}: {result.rect.width} × {result.rect.height}
                                                   </Text>
                                                 )}
                                               </div>
@@ -1086,7 +1106,7 @@ export default function NestDetectionPage() {
                                     marginBottom: '16px',
                                     color: '#ccc'
                                   }} />
-                                  <p style={{ fontSize: '16px', margin: 0 }}>暂无检测数据</p>
+                                  <p style={{ fontSize: '16px', margin: 0 }}>{t.noDetectionData}</p>
                                 </div>
                               )}
                             </div>
@@ -1094,7 +1114,7 @@ export default function NestDetectionPage() {
                         },
                         {
                           key: '2',
-                          label: 'Request',
+                          label: t.request,
                           children: (
                             <div style={{ 
                               padding: '24px',
@@ -1129,7 +1149,7 @@ export default function NestDetectionPage() {
                                     marginBottom: '16px',
                                     color: '#ccc'
                                   }} />
-                                  <p style={{ fontSize: '16px', margin: 0 }}>暂无请求数据</p>
+                                  <p style={{ fontSize: '16px', margin: 0 }}>{t.noRequestData}</p>
                                 </div>
                               )}
                             </div>
@@ -1137,7 +1157,7 @@ export default function NestDetectionPage() {
                         },
                         {
                           key: '3',
-                          label: 'Response',
+                          label: t.response,
                           children: (
                             <div style={{ 
                               padding: '24px',
@@ -1179,7 +1199,7 @@ export default function NestDetectionPage() {
                                     marginBottom: '16px',
                                     color: '#ccc'
                                   }} />
-                                  <p style={{ fontSize: '16px', margin: 0 }}>暂无响应数据</p>
+                                  <p style={{ fontSize: '16px', margin: 0 }}>{t.noResponseData}</p>
                                 </div>
                               )}
                             </div>
@@ -1196,4 +1216,4 @@ export default function NestDetectionPage() {
       </ConfigProvider>
     </>
   )
-} 
+}
