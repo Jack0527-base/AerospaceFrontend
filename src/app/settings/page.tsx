@@ -42,6 +42,7 @@ import {
 import { AvatarUpload } from '@/components/avatar-upload'
 import enUS from 'antd/locale/en_US'
 import zhCN from 'antd/locale/zh_CN'
+import { getI18nText, getCurrentLanguage, setLanguage, type Language } from '@/lib/i18n'
 
 const { Header, Sider, Content } = Layout
 const { Title, Text } = Typography
@@ -49,17 +50,9 @@ const { Option } = Select
 
 type Locale = ConfigProviderProps['locale']
 
-// 国际化文本
-const i18nTexts = {
+// 设置页面专用的国际化文本（扩展共享配置）
+const settingsI18nTexts = {
   zh: {
-    // 菜单项
-    dashboard: '仪表盘',
-    carRecognition: '绝缘子检测',
-    systemSettings: '系统设置',
-    userSettings: '用户设置',
-    generalSettings: '通用设置',
-    aboutUs: '关于我们',
-    
     // 页面标题和描述
     userSettingsDesc: '管理您的个人信息和头像',
     generalSettingsDesc: '配置系统外观和语言偏好',
@@ -106,14 +99,6 @@ const i18nTexts = {
     languageChanged: '语言已切换！'
   },
   en: {
-    // 菜单项
-    dashboard: 'Dashboard',
-    carRecognition: 'License Plate Recognition',
-    systemSettings: 'System Settings',
-    userSettings: 'User Settings',
-    generalSettings: 'General Settings',
-    aboutUs: 'About Us',
-    
     // 页面标题和描述
     userSettingsDesc: 'Manage your personal information and avatar',
     generalSettingsDesc: 'Configure system appearance and language preferences',
@@ -211,7 +196,7 @@ function SettingsPageContent() {
   const { isAuthenticated, user, updateUser } = useAuthStore()
   const [collapsed, setCollapsed] = useState(false)
   const [currentTheme, setCurrentTheme] = useState<ThemeData>(defaultLightTheme)
-  const [currentLang, setCurrentLang] = useState<'zh' | 'en'>('zh')
+  const [currentLang, setCurrentLang] = useState<Language>(getCurrentLanguage())
   const [locale, setLocale] = useState<Locale>(zhCN)
   const [userForm] = Form.useForm()
   const [systemForm] = Form.useForm()
@@ -223,8 +208,10 @@ function SettingsPageContent() {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken()
 
-  // 获取当前语言的文本
-  const t = i18nTexts[currentLang]
+  // 获取当前语言的文本（合并共享配置和设置页面专用配置）
+  const sharedT = getI18nText(currentLang)
+  const settingsT = settingsI18nTexts[currentLang]
+  const t = { ...sharedT, ...settingsT }
 
   // 检查登录状态
   useEffect(() => {
@@ -236,11 +223,9 @@ function SettingsPageContent() {
   // 加载语言偏好
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedLang = localStorage.getItem('language') as 'zh' | 'en'
-      if (savedLang && (savedLang === 'zh' || savedLang === 'en')) {
-        setCurrentLang(savedLang)
-        setLocale(savedLang === 'zh' ? zhCN : enUS)
-      }
+      const lang = getCurrentLanguage()
+      setCurrentLang(lang)
+      setLocale(lang === 'zh' ? zhCN : enUS)
     }
   }, [])
 
@@ -269,11 +254,11 @@ function SettingsPageContent() {
 
   const isDark = currentTheme.algorithm === 'dark'
 
-  const handleLanguageChange = (value: 'zh' | 'en') => {
+  const handleLanguageChange = (value: Language) => {
     setCurrentLang(value)
     setLocale(value === 'zh' ? zhCN : enUS)
-    localStorage.setItem('language', value)
-    message.success(i18nTexts[value].languageChanged)
+    setLanguage(value) // 使用共享函数保存语言设置
+    message.success(settingsI18nTexts[value].languageChanged)
   }
 
   const handleNavigation = (path: string) => {
@@ -310,7 +295,7 @@ function SettingsPageContent() {
     {
       key: 'nest-detection',
       icon: <HomeOutlined />,
-      label: '鸟巢检测',
+      label: t.nestDetection,
       onClick: () => handleNavigation('nest-detection')
     },
     {
@@ -589,7 +574,10 @@ function SettingsPageContent() {
           background-color: rgba(255, 255, 255, 0.12) !important;
         }
         :global(.custom-settings-menu.ant-menu-dark .ant-menu-submenu-selected > .ant-menu-submenu-title),
-        :global(.custom-settings-menu.ant-menu-dark .ant-menu-submenu-open > .ant-menu-submenu-title) {
+        :global(.custom-settings-menu.ant-menu-dark .ant-menu-submenu-open > .ant-menu-submenu-title),
+        :global(.custom-settings-menu.ant-menu-dark .ant-menu-submenu-active > .ant-menu-submenu-title),
+        :global(.custom-settings-menu.ant-menu-dark .ant-menu-submenu-title:active),
+        :global(.custom-settings-menu.ant-menu-dark .ant-menu-submenu-title:focus) {
           background-color: transparent !important;
         }
         :global(.custom-settings-menu.ant-menu-dark .ant-menu-sub) {
@@ -637,6 +625,15 @@ function SettingsPageContent() {
             colorFillContent: isDark ? '#262626' : '#f5f5f5',
             colorBgTextHover: isDark ? '#2a2a2a' : '#f5f5f5',
           },
+          components: {
+            Menu: {
+              itemBg: 'transparent',
+              subMenuItemBg: 'transparent',
+              itemActiveBg: 'transparent',
+              itemSelectedBg: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.12)',
+              itemHoverBg: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.08)',
+            },
+          },
           algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
         }}
       >
@@ -669,10 +666,14 @@ function SettingsPageContent() {
               borderBottom: '1px solid rgba(255,255,255,0.1)',
               paddingBottom: 16
             }}>
-              <ThunderboltOutlined style={{ fontSize: '24px', color: '#fff' }} />
+              {settingsType === 'general' ? (
+                <GlobalOutlined style={{ fontSize: '24px', color: '#fff' }} />
+              ) : (
+                <UserOutlined style={{ fontSize: '24px', color: '#fff' }} />
+              )}
               {!collapsed && (
                 <Title level={4} style={{ margin: '0 0 0 12px', color: '#fff', fontSize: '16px' }}>
-                  绝缘子检测
+                  {settingsType === 'general' ? t.generalSettings : t.userSettings}
                 </Title>
               )}
             </div>

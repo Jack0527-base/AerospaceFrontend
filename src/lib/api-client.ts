@@ -259,10 +259,10 @@ export class ApiClient {
     }
   }
 
-  // ============ Roboflow绝缘子缺陷检测API ============
+  // ============ Roboflow绝缘子检测API ============
 
   /**
-   * Roboflow绝缘子缺陷检测（使用Base64图片）
+   * Roboflow绝缘子检测（使用Base64图片）
    * POST https://serverless.roboflow.com/insulator-defect-c1kcs/1
    */
   async detectInsulatorByBase64(imageBase64: string): Promise<DetectResponse> {
@@ -283,12 +283,12 @@ export class ApiClient {
       // 转换Roboflow响应格式为DetectResponse格式
       return this.convertRoboflowResponse(response.data)
     } catch (error: any) {
-      throw this.handleError(error, '绝缘子缺陷检测失败')
+      throw this.handleError(error, '绝缘子检测失败')
     }
   }
 
   /**
-   * Roboflow绝缘子缺陷检测（使用图片文件）
+   * Roboflow绝缘子检测（使用图片文件）
    */
   async detectInsulatorByImage(file: File): Promise<DetectResponse> {
     try {
@@ -298,7 +298,7 @@ export class ApiClient {
       const base64Data = base64.split(',')[1] || base64
       return await this.detectInsulatorByBase64(base64Data)
     } catch (error: any) {
-      throw this.handleError(error, '绝缘子缺陷检测失败')
+      throw this.handleError(error, '绝缘子检测失败')
     }
   }
 
@@ -991,7 +991,7 @@ export const backendApi = {
     autoRegister: (request?: AutoRegisterRequest) => apiClient.autoRegister(request),
   },
   
-  // 绝缘子缺陷检测（Roboflow）
+  // 绝缘子检测（Roboflow）
   detect: {
     byBase64: (imageBase64: string) => apiClient.detectInsulatorByBase64(imageBase64),
     byImage: (file: File) => apiClient.detectInsulatorByImage(file),

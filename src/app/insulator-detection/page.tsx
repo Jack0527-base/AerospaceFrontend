@@ -305,7 +305,10 @@ export default function InsulatorDetectionPage() {
     input.click()
   }
 
-  // 绝缘子缺陷检测
+  /**
+   * 绝缘子检测
+   * 上传图片并调用API进行检测
+   */
   const handleDetection = async () => {
     console.log('开始检测，当前选中文件:', selectedFile)
     
@@ -328,7 +331,7 @@ export default function InsulatorDetectionPage() {
     setActiveTab('1')
 
     try {
-      console.log('开始绝缘子缺陷检测，文件信息:', {
+      console.log('开始绝缘子检测，文件信息:', {
         name: selectedFile.name,
         size: selectedFile.size,
         type: selectedFile.type
@@ -370,7 +373,7 @@ export default function InsulatorDetectionPage() {
         setDetectionResults(response.infos)
         console.log(`检测成功！识别到 ${response.infos.length} 个缺陷`)
       } else {
-        const errorMessage = response.messages?.[0]?.description || '绝缘子缺陷检测失败'
+        const errorMessage = response.messages?.[0]?.description || '绝缘子检测失败'
         setError(errorMessage)
         message.error(errorMessage)
         console.error('检测失败:', errorMessage)
@@ -458,7 +461,10 @@ export default function InsulatorDetectionPage() {
           background-color: rgba(255, 255, 255, 0.12) !important;
         }
         :global(.custom-menu.ant-menu-dark .ant-menu-submenu-selected > .ant-menu-submenu-title),
-        :global(.custom-menu.ant-menu-dark .ant-menu-submenu-open > .ant-menu-submenu-title) {
+        :global(.custom-menu.ant-menu-dark .ant-menu-submenu-open > .ant-menu-submenu-title),
+        :global(.custom-menu.ant-menu-dark .ant-menu-submenu-active > .ant-menu-submenu-title),
+        :global(.custom-menu.ant-menu-dark .ant-menu-submenu-title:active),
+        :global(.custom-menu.ant-menu-dark .ant-menu-submenu-title:focus) {
           background-color: transparent !important;
         }
         :global(.custom-menu.ant-menu-dark .ant-menu-sub) {
@@ -504,6 +510,15 @@ export default function InsulatorDetectionPage() {
             colorFillAlter: isDark ? '#1f1f1f' : '#fafafa',
             colorFillContent: isDark ? '#262626' : '#f5f5f5',
             colorBgTextHover: isDark ? '#2a2a2a' : '#f5f5f5',
+          },
+          components: {
+            Menu: {
+              itemBg: 'transparent',
+              subMenuItemBg: 'transparent',
+              itemActiveBg: 'transparent',
+              itemSelectedBg: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.12)',
+              itemHoverBg: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.08)',
+            },
           },
           algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
         }}

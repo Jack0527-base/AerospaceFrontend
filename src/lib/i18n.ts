@@ -1,8 +1,39 @@
-// 共享的国际化配置文件
+/**
+ * Internationalization (i18n) Module
+ * 
+ * 国际化配置模块，提供多语言支持功能
+ * 
+ * @module i18n
+ * @description 
+ * 该模块提供了以下功能：
+ * - 定义支持的语言类型（中文、英文）
+ * - 存储所有国际化文本内容
+ * - 提供语言设置和获取的实用函数
+ * - 支持从本地存储读取和保存语言偏好
+ * 
+ * @author Aerotrace Development Team
+ * @version 1.0.0
+ */
 
+/**
+ * 支持的语言类型
+ * 
+ * @typedef {('zh' | 'en')} Language
+ * @description 'zh' 表示中文，'en' 表示英文
+ */
 export type Language = 'zh' | 'en'
 
-// 国际化文本
+/**
+ * 国际化文本内容对象
+ * 
+ * @constant {Object} i18nTexts
+ * @description 
+ * 包含所有支持语言的文本内容映射
+ * 每个语言对象包含应用所有页面和组件的文本内容
+ * 
+ * @property {Object} zh - 中文文本内容
+ * @property {Object} en - 英文文本内容
+ */
 export const i18nTexts = {
   zh: {
     // 菜单项
@@ -77,9 +108,9 @@ export const i18nTexts = {
     ],
     
     // 绝缘子检测页面
-    insulatorDetectionTitle: '绝缘子缺陷检测',
+    insulatorDetectionTitle: '绝缘子检测',
     insulatorDetectionSubtitle: '上传图片，智能检测绝缘子缺陷',
-    insulatorDetectionReady: '图片已准备就绪，点击"开始检测"即可检测绝缘子缺陷',
+    insulatorDetectionReady: '图片已准备就绪，点击"开始检测"即可检测绝缘子',
     insulator: '绝缘子',
     defect: '缺陷',
     insulatorDetectionTips: [
@@ -94,7 +125,17 @@ export const i18nTexts = {
     request: 'Request',
     response: 'Response',
     noRequestData: '暂无请求数据',
-    noResponseData: '暂无响应数据'
+    noResponseData: '暂无响应数据',
+    
+    // 关于我们页面
+    aboutUsTitle: '关于我们',
+    aboutUsSubtitle: '了解我们的团队和产品',
+    companyName: '公司名称',
+    companyDescription: '公司简介',
+    teamIntroduction: '团队介绍',
+    contactUs: '联系我们',
+    version: '版本信息',
+    copyright: '版权所有'
   },
   en: {
     // 菜单项
@@ -169,9 +210,9 @@ export const i18nTexts = {
     ],
     
     // 绝缘子检测页面
-    insulatorDetectionTitle: 'Insulator Defect Detection',
-    insulatorDetectionSubtitle: 'Upload image to intelligently detect insulator defects',
-    insulatorDetectionReady: 'Image is ready, click "Start Detection" to detect insulator defects',
+    insulatorDetectionTitle: 'Insulator Detection',
+    insulatorDetectionSubtitle: 'Upload image to intelligently detect insulators defects',
+    insulatorDetectionReady: 'Image is ready, click "Start Detection" to detect insulators',
     insulator: 'Insulator',
     defect: 'Defect',
     insulatorDetectionTips: [
@@ -186,11 +227,33 @@ export const i18nTexts = {
     request: 'Request',
     response: 'Response',
     noRequestData: 'No request data',
-    noResponseData: 'No response data'
+    noResponseData: 'No response data',
+    
+    // 关于我们页面
+    aboutUsTitle: 'About Us',
+    aboutUsSubtitle: 'Learn about our team and products',
+    companyName: 'Company Name',
+    companyDescription: 'Company Description',
+    teamIntroduction: 'Team Introduction',
+    contactUs: 'Contact Us',
+    version: 'Version',
+    copyright: 'Copyright'
   }
 }
 
-// 获取当前语言设置
+/**
+ * 获取当前语言设置
+ * 
+ * @function getCurrentLanguage
+ * @description 
+ * 从浏览器本地存储（localStorage）读取用户的语言偏好设置
+ * 如果未设置或不在浏览器环境，则返回默认语言（中文）
+ * 
+ * @returns {Language} 当前语言设置（'zh' 或 'en'）
+ * 
+ * @example
+ * const lang = getCurrentLanguage() // 返回 'zh' 或 'en'
+ */
 export function getCurrentLanguage(): Language {
   if (typeof window !== 'undefined') {
     const savedLang = localStorage.getItem('language')
@@ -199,14 +262,41 @@ export function getCurrentLanguage(): Language {
   return 'zh'
 }
 
-// 设置语言
+/**
+ * 设置语言偏好
+ * 
+ * @function setLanguage
+ * @description 
+ * 将用户选择的语言保存到浏览器本地存储（localStorage）
+ * 用于持久化用户的语言偏好设置
+ * 
+ * @param {Language} lang - 要设置的语言（'zh' 或 'en'）
+ * @returns {void}
+ * 
+ * @example
+ * setLanguage('en') // 设置语言为英文
+ */
 export function setLanguage(lang: Language): void {
   if (typeof window !== 'undefined') {
     localStorage.setItem('language', lang)
   }
 }
 
-// 获取国际化文本
+/**
+ * 获取国际化文本对象
+ * 
+ * @function getI18nText
+ * @description 
+ * 根据指定的语言返回对应的国际化文本对象
+ * 如果未指定语言，则使用当前语言设置
+ * 
+ * @param {Language} [lang] - 可选的语言参数，如果不提供则使用当前语言设置
+ * @returns {Object} 对应语言的国际化文本对象
+ * 
+ * @example
+ * const texts = getI18nText('en') // 获取英文文本对象
+ * const currentTexts = getI18nText() // 获取当前语言的文本对象
+ */
 export function getI18nText(lang?: Language) {
   const currentLang = lang || getCurrentLanguage()
   return i18nTexts[currentLang]

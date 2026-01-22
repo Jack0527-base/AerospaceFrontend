@@ -473,7 +473,10 @@ export default function NestDetectionPage() {
           background-color: rgba(255, 255, 255, 0.12) !important;
         }
         :global(.custom-menu.ant-menu-dark .ant-menu-submenu-selected > .ant-menu-submenu-title),
-        :global(.custom-menu.ant-menu-dark .ant-menu-submenu-open > .ant-menu-submenu-title) {
+        :global(.custom-menu.ant-menu-dark .ant-menu-submenu-open > .ant-menu-submenu-title),
+        :global(.custom-menu.ant-menu-dark .ant-menu-submenu-active > .ant-menu-submenu-title),
+        :global(.custom-menu.ant-menu-dark .ant-menu-submenu-title:active),
+        :global(.custom-menu.ant-menu-dark .ant-menu-submenu-title:focus) {
           background-color: transparent !important;
         }
         :global(.custom-menu.ant-menu-dark .ant-menu-sub) {
@@ -519,6 +522,15 @@ export default function NestDetectionPage() {
             colorFillAlter: isDark ? '#1f1f1f' : '#fafafa',
             colorFillContent: isDark ? '#262626' : '#f5f5f5',
             colorBgTextHover: isDark ? '#2a2a2a' : '#f5f5f5',
+          },
+          components: {
+            Menu: {
+              itemBg: 'transparent',
+              subMenuItemBg: 'transparent',
+              itemActiveBg: 'transparent',
+              itemSelectedBg: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.12)',
+              itemHoverBg: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.08)',
+            },
           },
           algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
         }}
@@ -902,7 +914,7 @@ export default function NestDetectionPage() {
                               height: '40px'
                             }}
                           >
-                            {isDetecting ? '识别中...' : '开始识别'}
+                            {isDetecting ? t.detecting : t.startDetection}
                           </Button>
                           
                           <Button
@@ -913,7 +925,7 @@ export default function NestDetectionPage() {
                               height: '40px'
                             }}
                           >
-                            清空
+                            {t.clear}
                           </Button>
                         </Space>
                         
@@ -972,7 +984,7 @@ export default function NestDetectionPage() {
                       items={[
                         {
                           key: '1',
-                          label: '识别结果',
+                          label: t.detectionResults,
                           children: (
                             <div style={{ 
                               padding: '24px',
